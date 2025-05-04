@@ -1,21 +1,17 @@
-import React from 'react'
-import { Layout } from './layout/layout'
-import ThemeWrapper from './components/ThemeWrapper'
+import React from "react";
+
+import Layout from "./layout/Layout";
+// import ThemeWrapper from './components/ThemeWrapper'
 function App() {
- 
   return (
     <>
-    <ThemeWrapper>
+      {/* <ThemeWrapper>
     <Layout/>
-    </ThemeWrapper>
+    </ThemeWrapper> */}
 
-
-
-       
-
-
+      <Layout />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
