@@ -9,64 +9,100 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
+
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        
-        const data = await response.json();
-        console.log("Login successful", data);
+  e.preventDefault();
+  console.log("[1] Form submitted");
   
-        
-  // ✅ Console log the specific token & user
-  console.log("Token:", data.token, "User:", data.user);
-
-
-       // ✅ NOW passing token & user
-  login(data.token, data.user);
-
-        navigate("/");
-      } else {
-        console.error("Login failed");
-        alert("Invalid credentials");
-      }
-    } catch (err) {
-      console.error("Login error:", err);
+  try {
+    console.log("[2] Starting fetch request");
+    const startTime = Date.now();
+    
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ username, password }),
+    });
+    const requestDuration = Date.now() - startTime;
+    
+    console.log(`[3] Request completed in ${requestDuration}ms`);
+    console.log("[4] Response status:", response.status);
+    
+    if (!response.ok) {
+      console.log("[5] Response not OK");
+      const errorText = await response.text();
+      console.log("[6] Error response body:", errorText);
+      throw new Error(errorText || "Login failed");
     }
-  };
+
+    console.log("[7] Parsing JSON response");
+    const data = await response.json();
+    console.log("[8] Parsed data:", data);
+    
+    console.log("[9] Calling auth context login");
+    login(data.token, data.user);
+    
+    console.log("[10] Navigating to home");
+    navigate("/");
+  } catch (err) {
+    console.error("[ERROR] Full error details:", {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+    alert(`Login failed: ${err.message}`);
+  }
+};
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 max-w-sm mx-auto">
-      <h2 className="text-2xl mb-4">Login</h2>
-      <input
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder="Username"
-        className="border p-2 w-full mb-2"
-        required
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        className="border p-2 w-full mb-2"
-        required
-      />
-      <button
-        type="submit"
-        className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"
-      >
-        Login
-      </button>
-    </form>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200">
+      <form onSubmit={handleSubmit} className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-sm mx-auto animate-fade-in border border-blue-100">
+        <div className="flex flex-col items-center mb-6">
+    
+          <h2 className="text-3xl font-bold text-blue-700 mb-1">Sign In</h2>
+          <p className="text-gray-400 text-sm">Welcome back! Please login to your account.</p>
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-600 mb-1" htmlFor="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Username"
+            className="border border-gray-300 rounded-xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg bg-gray-50"
+            required
+            autoFocus
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-600 mb-1" htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="border border-gray-300 rounded-xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg bg-gray-50"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl w-full text-lg font-semibold shadow-md transition"
+        >
+          Login
+        </button>
+        {/* Optionally, add a divider and a sign up link */}
+        <div className="mt-6 text-center text-gray-400 text-sm">
+          Don't have an account? <span className="text-blue-500 hover:underline cursor-pointer">Sign up</span>
+        </div>
+      </form>
+    </div>
   );
 };
 

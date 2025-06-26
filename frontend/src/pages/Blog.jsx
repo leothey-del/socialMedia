@@ -29,39 +29,11 @@ const Blog = () => {
           </a>
         </div>
 
-        <div className="bg-white text-black p-4 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold">Another Blog Post Title</h2>
-          <p className="mt-2">
-            This is another brief description of the blog post.
-          </p>
-          <a href="" className="text-blue-500 underline">
-            Read more
-          </a>
-        </div>
-
-        <div className="bg-white text-black p-4 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold">Another Blog Post Title</h2>
-          <p className="mt-2">
-            This is another brief description of the blog post.
-          </p>
-          <a href="" className="text-blue-500 underline">
-            Read more
-          </a>
-        </div>
-
-        <div className="bg-white text-black p-4 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold">Another Blog Post Title</h2>
-          <p className="mt-2">
-            This is another brief description of the blog post.
-          </p>
-          <a href="" className="text-blue-500 underline">
-            Read more
-          </a>
-        </div>
-      </div>
-
-
+       
       
+
+     
+      </div>
     </div>
   );
 };

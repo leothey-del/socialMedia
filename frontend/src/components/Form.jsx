@@ -3,10 +3,8 @@ import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 
 const BlogPostForm = () => {
-
-const { user} = useContext(AuthContext);
-
-  const [inputPost, setInputPost] = useState({ title: "", content: "" });
+  const { user } = useContext(AuthContext);
+  const [inputPost, setInputPost] = useState({ content: "" });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -21,11 +19,10 @@ const { user} = useContext(AuthContext);
     setSuccess(null);
 
     // Validate inputs
-    if ( !inputPost.content.trim()) {
+    if (!inputPost.content.trim()) {
       setError("Title and content are required");
       return;
     }
-    
     if (inputPost.content.length < 10) {
       setError("Content must be at least 10 characters long");
       return;
@@ -36,40 +33,19 @@ const { user} = useContext(AuthContext);
       content: inputPost.content,
     };
 
-    console.log("Sending payload:", payload); // Debug payload
-
     try {
       const response = await axios.post("http://localhost:5000/api/post", payload);
       setSuccess("Blog post added successfully!");
-      setInputPost({ user: "", content: "" });
-      console.log("Response:", response.data);
+      setInputPost({ content: "" });
     } catch (err) {
       const errorMessage = err.response?.data?.error || "Failed to create blog post";
       setError(errorMessage);
-      console.error("Backend error:", err.response?.data); // Log full error response
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-8">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-            Title
-          </label>
-          {/* userName */}
-          <input
-            id="title"
-            name="title"
-          
-            onChange={handleChange}
-            className="hidden  md:hidden"
-            placeholder={user?.username}
-            aria-required="true"
-          />
-          {/* userName */}
-         
-        </div>
         <div>
           <label htmlFor="content" className="block text-sm font-medium text-gray-700">
             Content

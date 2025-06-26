@@ -6,7 +6,7 @@ import CreatePostForm from '../components/CreatePostForm';
 import { Link } from 'react-router-dom';
 
 const fetchAllPosts = async () => {
-  const response = await axios.get('http://localhost:5000/api/post');
+  const response = await axios.get('http://localhost:5000/api/posts');
   return response.data;
 };
 

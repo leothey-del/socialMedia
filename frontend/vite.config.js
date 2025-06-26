@@ -1,18 +1,26 @@
-
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from '@tailwindcss/vite';
+
 export default defineConfig({
-  plugins: [react(),tailwindcss()],
+  plugins: [react(), tailwindcss()],
   server: {
     proxy: {
       '/api': {
-        target: `http://localhost:${process.env.PORT}`, // Use the port your backend is running on
+        target: 'http://localhost:5000', // Your gateway port
         changeOrigin: true,
-        // Optional: If your backend API doesn't have the '/api' prefix, uncomment and adjust
-        // rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
-  },
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api'), // Keep the /api prefix
+        configure: (proxy, options) => {
+          // For debugging proxy issues
+          proxy.on('error', (err, req, res) => {
+            console.log('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('Proxy request:', req.method, req.url);
+          });
+        }
+      }
+    }
+  }
 });

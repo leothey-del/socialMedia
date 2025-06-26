@@ -7,13 +7,13 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 const fetchSinglePost= async (id) => {
-    const response  = await axios.get(`http://localhost:5000/api/post/${id}`);
+    const response  = await axios.get(`/api/posts/${id}`);
 
   return response.data;
 };
 
 const deletePost = async (id) => {
-    return axios.delete(`http://localhost:5000/api/post/${id}`);
+    return axios.delete(`/api/posts/${id}`);
   };
   
 

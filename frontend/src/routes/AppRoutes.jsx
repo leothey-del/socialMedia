@@ -1,4 +1,3 @@
-
 import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import Project from "../pages/Project";
@@ -31,7 +30,15 @@ const AppRoutes = () => {
         path="/"
         element={
           <ProtectedRoute>
-            <Home />
+            <Feed />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/feed"
+        element={
+          <ProtectedRoute>
+            <Feed />
           </ProtectedRoute>
         }
       />
@@ -59,16 +66,8 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/feed"
-        element={
-          <ProtectedRoute>
-            <Feed />
-          </ProtectedRoute>
-        }
-      />
 
-<Route
+      <Route
         path="/myfeed"
         element={
           <ProtectedRoute>
@@ -77,7 +76,7 @@ const AppRoutes = () => {
         }
       />
 
-<Route
+      <Route
         path="/post/:id"
         element={
           <ProtectedRoute>
