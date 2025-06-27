@@ -3,70 +3,54 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 
-// Enhanced CORS Configuration
+// --- CORS Configuration ---
+// It's good practice to get this from environment variables in production
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  process.env.GATEWAY_URL,
-  'http://localhost:3000' // For local testing
+  'http://localhost:3000'
 ].filter(Boolean);
 
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Modern MongoDB Connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB connected successfully');
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    process.exit(1);
-  }
-};
+app.use(express.json());
 
-// Graceful Shutdown
-const shutdown = async () => {
-  try {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed');
-    process.exit(0);
-  } catch (err) {
-    console.error('Shutdown error:', err);
-    process.exit(1);
-  }
-};
 
-// Routes
-app.post('/login', (req, res) => {
+// --- Database Connection ---
+// This connects to the database as soon as the function is initialized.
+// Vercel can reuse this connection for subsequent "warm" requests for better performance.
+try {
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log('MongoDB connected successfully on initial load.');
+} catch (err) {
+  console.error('Initial MongoDB connection error:', err.message);
+  // We don't exit here, to allow the health check to still respond
+}
+
+
+// --- Routes ---
+// For a serverless function, you must export the app as the default.
+// Vercel will pass the incoming request to this exported app.
+
+// Test Login Route
+app.post('/api/auth/login', (req, res) => {
   res.json({ 
     success: true,
-    message: 'Login successful',
+    message: 'Login successful (Vercel)',
     timestamp: new Date().toISOString()
   });
 });
 
-// Health Check
-app.get('/health', (req, res) => {
+// Health Check Route
+app.get('/api/auth/health', (req, res) => {
   res.json({
     status: 'healthy',
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    uptime: process.uptime()
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
-// Start Server
-const server = app.listen(PORT, async () => {
-  await connectDB();
-  console.log(`Auth service running on port ${PORT}`);
-  console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
-});
-
-// Handle shutdown signals
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+// IMPORTANT: This is the ES Module equivalent of module.exports = app;
+export default app;
