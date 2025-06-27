@@ -6,28 +6,26 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL;
-const POSTS_SERVICE_URL = process.env.POSTS_SERVICE_URL;
+// Get the separate host and port from Render's environment
+const AUTH_SERVICE_HOST = process.env.AUTH_SERVICE_HOST;
+const AUTH_SERVICE_PORT = process.env.AUTH_SERVICE_PORT;
+const POSTS_SERVICE_HOST = process.env.POSTS_SERVICE_HOST;
+const POSTS_SERVICE_PORT = process.env.POSTS_SERVICE_PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
-// =================================================================
-// --- NEW DIAGNOSTIC LOGS ---
-console.log("--- GATEWAY STARTUP VARIABLES ---");
-console.log("GATEWAY: FRONTEND_URL:", FRONTEND_URL);
-console.log("GATEWAY: Target for Auth Service:", AUTH_SERVICE_URL);
-console.log("GATEWAY: Target for Posts Service:", POSTS_SERVICE_URL);
-console.log("---------------------------------");
-// =================================================================
+// Construct the full, valid URLs inside the code
+const AUTH_SERVICE_URL = `http://${AUTH_SERVICE_HOST}:${AUTH_SERVICE_PORT}`;
+const POSTS_SERVICE_URL = `http://${POSTS_SERVICE_HOST}:${POSTS_SERVICE_PORT}`;
 
-if (!AUTH_SERVICE_URL || !POSTS_SERVICE_URL || !FRONTEND_URL) {
-    console.error("Error: Required environment variables are not set.");
+// The safety check
+if (!AUTH_SERVICE_HOST || !POSTS_SERVICE_HOST || !FRONTEND_URL) {
+    console.error("Error: Required service host or frontend URL environment variables are not set.");
     process.exit(1); 
 }
 
 const app = express();
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 
-// --- Health Check ---
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'Gateway OK' });
 });
@@ -36,13 +34,16 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', createProxyMiddleware({
     target: AUTH_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/api/auth': '/' },
+    // FIX: Use an empty string '' to prevent double slashes
+    pathRewrite: { '^/api/auth': '' }, 
     logLevel: 'debug'
 }));
+
 app.use('/api/posts', createProxyMiddleware({
     target: POSTS_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: { '^/api/posts': '/' },
+    // FIX: Use an empty string '' to prevent double slashes
+    pathRewrite: { '^/api/posts': '' },
     logLevel: 'debug'
 }));
 
@@ -54,4 +55,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Gateway running on port ${PORT}`);
+    console.log(`Proxying to Auth Service at: ${AUTH_SERVICE_URL}`);
+    console.log(`Proxying to Posts Service at: ${POSTS_SERVICE_URL}`);
 });

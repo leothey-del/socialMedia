@@ -1,7 +1,6 @@
-# Final and Corrected render.yaml for the socialMedia project
+# Final Corrected render.yaml
 
 services:
-  # The API Gateway is the only public-facing service.
   - type: web
     name: gateway
     env: node
@@ -11,36 +10,20 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
+    healthCheckInitialDelaySeconds: 30
     envVars:
       - fromGroup: backend-secrets
-      # --- FIX FOR AUTH SERVICE URL ---
+      # Get the host and port for the auth service
       - key: AUTH_SERVICE_HOST
-        fromService:
-          type: web
-          name: auth-service
-          property: host
+        fromService: { type: web, name: auth-service, property: host }
       - key: AUTH_SERVICE_PORT
-        fromService:
-          type: web
-          name: auth-service
-          property: port
-      - key: AUTH_SERVICE_URL
-        value: http://${AUTH_SERVICE_HOST}:${AUTH_SERVICE_PORT}
-      # --- FIX FOR POSTS SERVICE URL ---
+        fromService: { type: web, name: auth-service, property: port }
+      # Get the host and port for the posts service
       - key: POSTS_SERVICE_HOST
-        fromService:
-          type: web
-          name: posts-service
-          property: host
+        fromService: { type: web, name: posts-service, property: host }
       - key: POSTS_SERVICE_PORT
-        fromService:
-          type: web
-          name: posts-service
-          property: port
-      - key: POSTS_SERVICE_URL
-        value: http://${POSTS_SERVICE_HOST}:${POSTS_SERVICE_PORT}
+        fromService: { type: web, name: posts-service, property: port }
 
-  # The Auth Service is a private internal service.
   - type: web
     name: auth-service
     env: node
@@ -50,10 +33,10 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
+    healthCheckInitialDelaySeconds: 30
     envVars:
       - fromGroup: backend-secrets
 
-  # The Posts Service is another private internal service.
   - type: web
     name: posts-service
     env: node
@@ -63,6 +46,6 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
+    healthCheckInitialDelaySeconds: 30
     envVars:
       - fromGroup: backend-secrets
-
