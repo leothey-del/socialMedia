@@ -1,5 +1,4 @@
 services:
-  # The API Gateway is the only public-facing service.
   - type: web
     name: gateway
     env: node
@@ -11,40 +10,16 @@ services:
     healthCheckPath: /health
     envVars:
       - fromGroup: backend-secrets
-      # Frontend URL for CORS
       - key: FRONTEND_URL
         value: https://social-media-lyart-two.vercel.app
-      # Auth service configuration
-      - key: AUTH_SERVICE_HOST
-        fromService:
-          type: web
-          name: auth-service
-          property: host
-      - key: AUTH_SERVICE_PORT
-        fromService:
-          type: web
-          name: auth-service
-          property: port
+      # Use Render's built-in service references
       - key: AUTH_SERVICE_URL
-        value: http://${AUTH_SERVICE_HOST}:${AUTH_SERVICE_PORT}
-      # Posts service configuration
-      - key: POSTS_SERVICE_HOST
-        fromService:
-          type: web
-          name: posts-service
-          property: host
-      - key: POSTS_SERVICE_PORT
-        fromService:
-          type: web
-          name: posts-service
-          property: port
+        value: http://auth-service:10000
       - key: POSTS_SERVICE_URL
-        value: http://${POSTS_SERVICE_HOST}:${POSTS_SERVICE_PORT}
-      # Additional recommended settings
+        value: http://posts-service:10000
       - key: NODE_ENV
         value: production
 
-  # The Auth Service
   - type: web
     name: auth-service
     env: node
@@ -56,15 +31,11 @@ services:
     healthCheckPath: /health
     envVars:
       - fromGroup: backend-secrets
-      - key: GATEWAY_URL
-        fromService:
-          type: web
-          name: gateway
-          property: url
+      - key: PORT
+        value: 10000
       - key: NODE_ENV
         value: production
 
-  # The Posts Service
   - type: web
     name: posts-service
     env: node
@@ -76,5 +47,7 @@ services:
     healthCheckPath: /health
     envVars:
       - fromGroup: backend-secrets
+      - key: PORT
+        value: 10000
       - key: NODE_ENV
         value: production
