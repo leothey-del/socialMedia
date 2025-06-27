@@ -12,7 +12,7 @@ services:
       - fromGroup: backend-secrets
       - key: FRONTEND_URL
         value: https://social-media-lyart-two.vercel.app
-      # Use Render's built-in service references
+      # Use direct service names (Render's internal DNS)
       - key: AUTH_SERVICE_URL
         value: http://auth-service:10000
       - key: POSTS_SERVICE_URL
