@@ -1,4 +1,4 @@
-# Final render.yaml for the socialMedia project
+# Final and Corrected render.yaml for the socialMedia project
 
 services:
   # The API Gateway is the only public-facing service.
@@ -6,30 +6,46 @@ services:
     name: gateway
     env: node
     plan: starter
-    repo: https://github.com/leothey-del/socialMedia.git # Your Repo URL
+    repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/gateway
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
     envVars:
       - fromGroup: backend-secrets
-      - key: AUTH_SERVICE_URL
+      # --- FIX FOR AUTH SERVICE URL ---
+      - key: AUTH_SERVICE_HOST
         fromService:
           type: web
           name: auth-service
-          property: url
-      - key: POSTS_SERVICE_URL
+          property: host
+      - key: AUTH_SERVICE_PORT
+        fromService:
+          type: web
+          name: auth-service
+          property: port
+      - key: AUTH_SERVICE_URL
+        value: http://${AUTH_SERVICE_HOST}:${AUTH_SERVICE_PORT}
+      # --- FIX FOR POSTS SERVICE URL ---
+      - key: POSTS_SERVICE_HOST
         fromService:
           type: web
           name: posts-service
-          property: url
+          property: host
+      - key: POSTS_SERVICE_PORT
+        fromService:
+          type: web
+          name: posts-service
+          property: port
+      - key: POSTS_SERVICE_URL
+        value: http://${POSTS_SERVICE_HOST}:${POSTS_SERVICE_PORT}
 
   # The Auth Service is a private internal service.
   - type: web
     name: auth-service
     env: node
     plan: starter
-    repo: https://github.com/leothey-del/socialMedia.git # Your Repo URL
+    repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/auth-service
     buildCommand: npm install
     startCommand: node server.js
@@ -42,7 +58,7 @@ services:
     name: posts-service
     env: node
     plan: starter
-    repo: https://github.com/leothey-del/socialMedia.git # Your Repo URL
+    repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/posts-service
     buildCommand: npm install
     startCommand: node server.js
