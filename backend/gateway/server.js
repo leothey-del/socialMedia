@@ -1,78 +1,56 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
-const fetch = require('node-fetch');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:10000';
-const POSTS_SERVICE_URL = process.env.POSTS_SERVICE_URL || 'http://localhost:10001';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-
 const app = express();
+const INIT_DELAY = parseInt(process.env.INIT_DELAY_MS) || 30000;
 
-// Enhanced CORS
+// Lightweight CORS config
 app.use(cors({
-  origin: [FRONTEND_URL, 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true
+  origin: process.env.FRONTEND_URL?.split(',') || ['http://localhost:3000'],
+  methods: ['GET', 'POST', 'OPTIONS']
 }));
 
-// Debug middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+// Startup delay middleware
+let isReady = false;
+setTimeout(() => { isReady = true }, INIT_DELAY);
+
+// Simplified health check
+app.get('/health', (req, res) => {
+  if (!isReady) return res.status(503).json({ status: 'STARTING' });
+  res.status(200).json({ 
+    status: 'OK',
+    services: {
+      auth: process.env.AUTH_SERVICE_URL,
+      posts: process.env.POSTS_SERVICE_URL
+    }
+  });
+});
+
+// Proxies with readiness check
+app.use(['/api/auth', '/api/posts'], (req, res, next) => {
+  if (!isReady) return res.status(503).json({ error: 'Service starting' });
   next();
 });
 
-// Health endpoint with service verification
-app.get('/health', async (req, res) => {
-  try {
-    const authHealth = await fetch(`${AUTH_SERVICE_URL}/health`).then(r => r.json());
-    const postsHealth = await fetch(`${POSTS_SERVICE_URL}/health`).then(r => r.json());
-    
-    res.status(200).json({
-      gateway: 'OK',
-      authService: authHealth,
-      postsService: postsHealth
-    });
-  } catch (err) {
-    res.status(500).json({
-      gateway: 'OK',
-      error: `Service connection failed: ${err.message}`
-    });
-  }
-});
-
-// Proxies with error handling
 app.use('/api/auth', createProxyMiddleware({
-  target: AUTH_SERVICE_URL,
+  target: process.env.AUTH_SERVICE_URL,
   changeOrigin: true,
-  pathRewrite: { '^/api/auth': '' },
-  onError: (err, req, res) => {
-    console.error('Auth Service Proxy Error:', err);
-    res.status(502).json({ error: 'Cannot connect to Auth Service' });
-  }
+  pathRewrite: { '^/api/auth': '' }
 }));
 
 app.use('/api/posts', createProxyMiddleware({
-  target: POSTS_SERVICE_URL,
+  target: process.env.POSTS_SERVICE_URL,
   changeOrigin: true,
-  pathRewrite: { '^/api/posts': '' },
-  onError: (err, req, res) => {
-    console.error('Posts Service Proxy Error:', err);
-    res.status(502).json({ error: 'Cannot connect to Posts Service' });
-  }
+  pathRewrite: { '^/api/posts': '' }
 }));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`
-  Gateway Service Running
-  Port: ${PORT}
-  Auth Service: ${AUTH_SERVICE_URL}
-  Posts Service: ${POSTS_SERVICE_URL}
-  Frontend URL: ${FRONTEND_URL}
-  `);
+  console.log(`Gateway started on port ${PORT}`);
+  console.log(`Will be ready in ${INIT_DELAY/1000} seconds...`);
 });

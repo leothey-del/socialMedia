@@ -5,19 +5,24 @@ services:
     plan: free
     repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/gateway
-    buildCommand: npm install
+    buildCommand: npm install --omit=dev --prefer-offline
     startCommand: node server.js
     healthCheckPath: /health
+    healthCheckIntervalSeconds: 10
+    healthCheckTimeoutSeconds: 5
+    healthThreshold: 2
     envVars:
       - fromGroup: backend-secrets
       - key: FRONTEND_URL
         value: https://social-media-lyart-two.vercel.app
       - key: AUTH_SERVICE_URL
-        value: http://auth-service.onrender.com
+        value: http://auth-service:10000
       - key: POSTS_SERVICE_URL
-        value: http://posts-service.onrender.com
+        value: http://posts-service:10000
       - key: NODE_ENV
         value: production
+      - key: INIT_DELAY_MS
+        value: "30000" # 30s service startup buffer
 
   - type: web
     name: auth-service
@@ -25,17 +30,18 @@ services:
     plan: free
     repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/auth-service
-    buildCommand: npm install
+    buildCommand: npm install --omit=dev --prefer-offline
     startCommand: node server.js
     healthCheckPath: /health
+    healthCheckIntervalSeconds: 15
     envVars:
       - fromGroup: backend-secrets
       - key: PORT
         value: 10000
       - key: NODE_ENV
         value: production
-      - key: GATEWAY_URL
-        value: https://gateway-bzl7.onrender.com
+      - key: INIT_DELAY_MS
+        value: "15000" # 15s DB connection time
 
   - type: web
     name: posts-service
@@ -43,9 +49,10 @@ services:
     plan: free
     repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/posts-service
-    buildCommand: npm install
+    buildCommand: npm install --omit=dev --prefer-offline
     startCommand: node server.js
     healthCheckPath: /health
+    healthCheckIntervalSeconds: 15
     envVars:
       - fromGroup: backend-secrets
       - key: PORT
