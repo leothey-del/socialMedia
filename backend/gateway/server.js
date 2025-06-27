@@ -1,47 +1,61 @@
+// --- THIS IS THE CRUCIAL LINE ---
+// It MUST be at the very top to load your .env file
+require('dotenv').config();
+
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
-const dotenv = require('dotenv');
 
-dotenv.config();
+// Now, these variables will be loaded correctly from your .env file
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL;
+const POSTS_SERVICE_URL = process.env.POSTS_SERVICE_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+// This check will now pass
+if (!AUTH_SERVICE_URL || !POSTS_SERVICE_URL || !FRONTEND_URL) {
+    console.error("Error: Make sure all required variables are in your .env file.");
+    process.exit(1); 
+}
+
 const app = express();
 
-// Middleware
+// --- CORS will use http://localhost:5173 from your .env file ---
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
+    origin: FRONTEND_URL,
+    credentials: true
 }));
 
-// Health check
+// --- Health Check ---
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'Gateway OK' });
+    res.status(200).json({ status: 'Gateway OK' });
 });
 
-// Auth Service Proxy
-app.use('/api/login', createProxyMiddleware({
-  target: 'http://localhost:5001',
-  changeOrigin: true,
-  pathRewrite: { '^/api/login': '/api/login' },
-  logLevel: 'debug'
+// --- Proxies will use the URLs from your .env file ---
+app.use('/api/auth', createProxyMiddleware({
+    target: AUTH_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/api/auth': '/' },
+    logLevel: 'debug'
 }));
 
-// Posts Service Proxy
 app.use('/api/posts', createProxyMiddleware({
-  target: 'http://localhost:5002',
-  changeOrigin: true,
-  pathRewrite: { '^/api/posts': '/api/posts' },
-  logLevel: 'debug'
+    target: POSTS_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: { '^/api/posts': '/' },
+    logLevel: 'debug'
 }));
 
-// Error handling
+// --- Error Handling ---
 app.use((err, req, res, next) => {
-  console.error('Gateway error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+    console.error('Gateway error:', err);
+    res.status(500).json({ error: 'Internal server error' });
 });
 
-const PORT = process.env.GATEWAY_PORT || 5000;
+// --- Port will be 5000 from your .env file ---
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`Gateway running on port ${PORT}`);
-  console.log(`Auth service: http://localhost:5001`);
-  console.log(`Posts service: http://localhost:5002`);
+    console.log(`Gateway running on port ${PORT}`);
+    console.log(`Proxying to Auth Service at: ${AUTH_SERVICE_URL}`);
+    console.log(`Proxying to Posts Service at: ${POSTS_SERVICE_URL}`);
 });

@@ -1,41 +1,41 @@
 // C:\Users\Lee\Downloads\codes\2025\social\socialMedia\backend\auth-service\server.js
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 const dotenv = require("dotenv");
 
-// Load environment variables from the .env file
+// Load environment variables from the .env file for local development
 dotenv.config();
 
 const app = express();
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // --- Database Connection ---
-// Get the database URI from environment variables
 const dbUri = process.env.MONGO_URI;
 
 // Check if the database URI is provided. If not, log an error and exit.
 if (!dbUri) {
-  console.error("FATAL ERROR: AUTH_DB_URI is not defined in the .env file.");
+  // Updated error message to be more accurate
+  console.error("FATAL ERROR: MONGO_URI is not defined in the .env file.");
   process.exit(1); // Exit the application with a failure code
 }
 
-// Connect to MongoDB Atlas
+// Connect to MongoDB
 mongoose.connect(dbUri)
-  .then(() => console.log("MongoDB connection successful."))
+  .then(() => console.log("Auth-Service: MongoDB connection successful."))
   .catch(err => {
-    console.error("MongoDB connection error:", err);
+    console.error("Auth-Service: MongoDB connection error:", err);
     process.exit(1); // Exit on connection failure
   });
 
 // --- Routes ---
-// Note: Ensure the './routes/login' file exists and is correctly set up.
-app.use("/api/login", require("./routes/login"));
-app.get("/api/health", (req, res) => {
-    res.status(200).json({ status: 'Auth service is running' });
+// This path now correctly matches the request sent from your gateway
+app.use("/login", require("./routes/login"));
+
+// A simple health check endpoint
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: 'Auth-Service is running' });
 });
 
 

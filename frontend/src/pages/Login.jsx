@@ -12,50 +12,60 @@ const Login = () => {
 
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  console.log("[1] Form submitted");
-  
-  try {
-    console.log("[2] Starting fetch request");
-    const startTime = Date.now();
-    
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify({ username, password }),
-    });
-    const requestDuration = Date.now() - startTime;
-    
-    console.log(`[3] Request completed in ${requestDuration}ms`);
-    console.log("[4] Response status:", response.status);
-    
-    if (!response.ok) {
-      console.log("[5] Response not OK");
-      const errorText = await response.text();
-      console.log("[6] Error response body:", errorText);
-      throw new Error(errorText || "Login failed");
-    }
+    e.preventDefault();
+    console.log("[1] Form submitted");
 
-    console.log("[7] Parsing JSON response");
-    const data = await response.json();
-    console.log("[8] Parsed data:", data);
+    // --- The Fix is Here ---
+    // 1. Get the base URL from the .env variable
+    const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL;
     
-    console.log("[9] Calling auth context login");
-    login(data.token, data.user);
-    
-    console.log("[10] Navigating to home");
-    navigate("/");
-  } catch (err) {
-    console.error("[ERROR] Full error details:", {
-      message: err.message,
-      stack: err.stack,
-      name: err.name
-    });
-    alert(`Login failed: ${err.message}`);
-  }
+    // 2. Combine it with the correct path: /api/auth/login
+    const API_URL = `${API_BASE_URL}/api/auth/login`;
+    // --- End of Fix ---
+
+    try {
+        console.log("[2] Starting fetch request to:", API_URL); // New log to see the URL
+        const startTime = Date.now();
+        
+        // Use the new API_URL variable in the fetch call
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ username, password }),
+        });
+
+        const requestDuration = Date.now() - startTime;
+        
+        console.log(`[3] Request completed in ${requestDuration}ms`);
+        console.log("[4] Response status:", response.status);
+        
+        if (!response.ok) {
+            console.log("[5] Response not OK");
+            const errorText = await response.text();
+            console.log("[6] Error response body:", errorText);
+            throw new Error(errorText || "Login failed");
+        }
+
+        console.log("[7] Parsing JSON response");
+        const data = await response.json();
+        console.log("[8] Parsed data:", data);
+        
+        console.log("[9] Calling auth context login");
+        login(data.token, data.user);
+        
+        console.log("[10] Navigating to home");
+        navigate("/");
+    } catch (err) {
+        console.error("[ERROR] Full error details:", {
+            message: err.message,
+            stack: err.stack,
+            name: err.name
+        });
+        alert(`Login failed: ${err.message}`);
+    }
 };
 
   return (

@@ -1,0 +1,56 @@
+# Final render.yaml for the socialMedia project
+
+services:
+  # The API Gateway is the only public-facing service.
+  - type: web
+    name: gateway
+    env: node
+    plan: starter
+    repo: https://github.com/leothey-del/socialMedia.git # Your Repo URL
+    rootDir: backend/gateway
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: backend-secrets
+      - key: AUTH_SERVICE_URL
+        fromService:
+          type: web
+          name: auth-service
+          property: url
+      - key: POSTS_SERVICE_URL
+        fromService:
+          type: web
+          name: posts-service
+          property: url
+
+  # The Auth Service is a private internal service.
+  - type: web
+    name: auth-service
+    env: node
+    plan: starter
+    repo: https://github.com/leothey-del/socialMedia.git # Your Repo URL
+    rootDir: backend/auth-service
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: backend-secrets
+
+  # The Posts Service is another private internal service.
+  - type: web
+    name: posts-service
+    env: node
+    plan: starter
+    repo: https://github.com/leothey-del/socialMedia.git # Your Repo URL
+    rootDir: backend/posts-service
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: backend-secrets
+
+databases:
+  # Your managed MongoDB instance.
+  - name: social-media-db
+    plan: free
