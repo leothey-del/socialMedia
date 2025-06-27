@@ -12,11 +12,10 @@ services:
       - fromGroup: backend-secrets
       - key: FRONTEND_URL
         value: https://social-media-lyart-two.vercel.app
-      # Use direct service names (Render's internal DNS)
       - key: AUTH_SERVICE_URL
-        value: http://auth-service:10000
+        value: http://auth-service.onrender.com
       - key: POSTS_SERVICE_URL
-        value: http://posts-service:10000
+        value: http://posts-service.onrender.com
       - key: NODE_ENV
         value: production
 
@@ -35,6 +34,8 @@ services:
         value: 10000
       - key: NODE_ENV
         value: production
+      - key: GATEWAY_URL
+        value: https://gateway-bzl7.onrender.com
 
   - type: web
     name: posts-service
