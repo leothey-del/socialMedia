@@ -1,26 +1,36 @@
-// ==========================================================
-// --- TEMPORARY TEST CODE for backend/auth-service/routes/login.js ---
-// ==========================================================
 const express = require("express");
+const User = require("../models/User");
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    // We are NOT talking to the database.
-    // We are just checking if the route itself works.
-    console.log("LOGIN ROUTE HIT! Bypassing database and sending success.");
+    const { username, password } = req.body;
+    console.log("Login attempt:", { username, password }); // Log the incoming credentials
+
+    const user = await User.findOne({ username });
+    console.log("Found user:", user); // Log the found user (or null)
+
+    if (!user || password !== user.password) {
+      console.log("Login failed - invalid credentials");
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+   
 
     res.status(200).json({
-      message: "Login route test successful!",
-      token: "test-token-123",
+      message: "Login successful",
+      token: "dummy-token",  // You can generate a real token later!
       user: {
-        _id: "testuser",
-        username: "testuser",
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture || "https://via.placeholder.com/40",
       },
     });
+   
   } catch (error) {
-    console.error("Error in temporary test route:", error);
-    res.status(500).json({ error: "Error in test route" });
+    console.error("Backend login error:", error);
+    res.status(500).json({ error: error.message || "Failed to login" });
   }
 });
 
