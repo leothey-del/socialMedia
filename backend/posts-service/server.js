@@ -1,46 +1,33 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import userPostRoute from './routes/userPostRoute.js'; // Use .js extension for ES Modules
+const express = require("express");
+const mongoose = require("mongoose");
 
-const app = express();
-
-// --- CORS Configuration ---
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000'
-].filter(Boolean);
-
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
-
-app.use(express.json());
-
-
-// --- Database Connection ---
-// This connects to the database as soon as the function is initialized.
-try {
-  await mongoose.connect(process.env.MONGO_URI);
-  console.log('Posts-Service: MongoDB connected successfully on initial load.');
-} catch (err) {
-  console.error('Posts-Service: Initial MongoDB connection error:', err.message);
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
 }
 
+const app = express();
+app.use(express.json());
 
-// --- Routes ---
-// It's good practice to include the base path here
-app.use('/api/posts', userPostRoute);
-
-// Health Check Route
-app.get('/api/posts/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+// --- Database Connection ---
+const dbUri = process.env.MONGO_URI;
+if (!dbUri) {
+  console.error("FATAL ERROR: MONGO_URI is not defined.");
+  process.exit(1);
+}
+mongoose.connect(dbUri)
+  .then(() => console.log("Posts-Service: MongoDB connection successful."))
+  .catch((err) => {
+    console.error("Posts-Service: MongoDB connection error:", err);
+    process.exit(1);
   });
+
+// --- Health Check (Moved to the top) ---
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: 'Posts-Service is running' });
 });
 
+// --- Main Routes (Now second) ---
+app.use("/", require("./routes/userPostRoute"));
 
-// IMPORTANT: Export the app for Vercel to use
-export default app;
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, () => console.log(`Posts Service running on port ${PORT}`));

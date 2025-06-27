@@ -1,56 +1,45 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
+const express = require("express");
+const mongoose = require("mongoose");
+
+// Only run dotenv in a development environment
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 
-// --- CORS Configuration ---
-// It's good practice to get this from environment variables in production
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000'
-].filter(Boolean);
-
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
-
+// Middleware
 app.use(express.json());
 
-
 // --- Database Connection ---
-// This connects to the database as soon as the function is initialized.
-// Vercel can reuse this connection for subsequent "warm" requests for better performance.
-try {
-  await mongoose.connect(process.env.MONGO_URI);
-  console.log('MongoDB connected successfully on initial load.');
-} catch (err) {
-  console.error('Initial MongoDB connection error:', err.message);
-  // We don't exit here, to allow the health check to still respond
+const dbUri = process.env.MONGO_URI;
+
+// Check if the database URI is provided. If not, log an error and exit.
+if (!dbUri) {
+  // Updated error message to be more accurate
+  console.error("FATAL ERROR: MONGO_URI is not defined in the .env file.");
+  process.exit(1); // Exit the application with a failure code
 }
 
+// Connect to MongoDB
+mongoose.connect(dbUri)
+  .then(() => console.log("Auth-Service: MongoDB connection successful."))
+  .catch(err => {
+    console.error("Auth-Service: MongoDB connection error:", err);
+    process.exit(1); // Exit on connection failure
+  });
 
 // --- Routes ---
-// For a serverless function, you must export the app as the default.
-// Vercel will pass the incoming request to this exported app.
+// This path now correctly matches the request sent from your gateway
+app.use("/login", require("./routes/login"));
 
-// Test Login Route
-app.post('/api/auth/login', (req, res) => {
-  res.json({ 
-    success: true,
-    message: 'Login successful (Vercel)',
-    timestamp: new Date().toISOString()
-  });
+// A simple health check endpoint
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: 'Auth-Service is running' });
 });
 
-// Health Check Route
-app.get('/api/auth/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-  });
-});
 
-// IMPORTANT: This is the ES Module equivalent of module.exports = app;
-export default app;
+// Get the port from environment variables, with a default fallback
+const PORT = process.env.PORT || 5001;
+
+app.listen(PORT, () => console.log(`Auth Service running on port ${PORT}`));
