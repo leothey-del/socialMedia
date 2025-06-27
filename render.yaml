@@ -5,7 +5,7 @@ services:
   - type: web
     name: gateway
     env: node
-    plan: starter
+    plan: free
     repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/gateway
     buildCommand: npm install
@@ -44,7 +44,7 @@ services:
   - type: web
     name: auth-service
     env: node
-    plan: starter
+    plan: free
     repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/auth-service
     buildCommand: npm install
@@ -57,7 +57,7 @@ services:
   - type: web
     name: posts-service
     env: node
-    plan: starter
+    plan: free
     repo: https://github.com/leothey-del/socialMedia.git
     rootDir: backend/posts-service
     buildCommand: npm install
