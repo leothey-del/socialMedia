@@ -1,10 +1,10 @@
-// C:\Users\Lee\Downloads\codes\2025\social\socialMedia\backend\auth-service\server.js
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
 
-// Load environment variables from the .env file for local development
-dotenv.config();
+// Only run dotenv in a development environment
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 

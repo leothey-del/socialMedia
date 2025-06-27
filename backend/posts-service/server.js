@@ -1,9 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
 
-// Load environment variables from the .env file for local development
-dotenv.config();
+// Only run dotenv in a development environment.
+// In production (on Render), variables will come from the Environment Group.
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 
@@ -14,7 +16,7 @@ app.use(express.json());
 const dbUri = process.env.MONGO_URI;
 
 if (!dbUri) {
-  console.error("FATAL ERROR: MONGO_URI is not defined in the .env file.");
+  console.error("FATAL ERROR: MONGO_URI is not defined. Check your Render Environment Group.");
   process.exit(1); // Exit the application with a failure code
 }
 
@@ -27,8 +29,7 @@ mongoose
   });
 
 // --- Routes ---
-// The path "/" now correctly matches the request sent from your gateway.
-// The gateway strips "/api/posts", leaving just "/" which is then handled by your userPostRoute.
+// The path "/" correctly matches the request sent from your gateway.
 app.use("/", require("./routes/userPostRoute"));
 
 // --- Health Check (Good Practice) ---
