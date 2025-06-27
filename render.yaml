@@ -1,49 +1,26 @@
 services:
   - type: web
-    name: gateway
-    env: node
-    plan: free
-    buildCommand: npm install
-    startCommand: node server.js
-    healthCheckPath: /health
-    envVars:
-      - key: FRONTEND_URL
-        value: https://social-media-lyart-two.vercel.app
-      - key: AUTH_SERVICE_URL
-        value: http://auth-service:10000
-      - key: POSTS_SERVICE_URL
-        value: http://posts-service:10000
-      - key: NODE_ENV
-        value: production
-
-  - type: web
     name: auth-service
     env: node
-    plan: free
-    buildCommand: npm install
+    plan: starter # Recommended for better performance
+    buildCommand: |
+      npm install
+      npm cache clean --force
     startCommand: node server.js
     healthCheckPath: /health
+    healthCheckIntervalSeconds: 15
+    healthCheckTimeoutSeconds: 10
     envVars:
       - key: PORT
         value: 10000
-      - key: GATEWAY_URL
-        value: https://gateway-bzl7.onrender.com
-      - key: FRONTEND_URL
-        value: https://social-media-lyart-two.vercel.app
       - key: MONGO_URI
         fromGroup: backend-secrets
+      - key: FRONTEND_URL
+        value: https://social-media-lyart-two.vercel.app
+      - key: GATEWAY_URL
+        value: https://gateway-bzl7.onrender.com
       - key: NODE_ENV
         value: production
-
-  - type: web
-    name: posts-service
-    env: node
-    plan: free
-    buildCommand: npm install
-    startCommand: node server.js
-    healthCheckPath: /health
-    envVars:
-      - key: PORT
-        value: 10000
-      - key: NODE_ENV
-        value: production
+    deployHooks:
+      postDeploy:
+        - curl -X GET https://$RENDER_SERVICE_NAME.onrender.com/health
