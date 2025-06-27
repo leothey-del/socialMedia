@@ -3,16 +3,10 @@ services:
     name: gateway
     env: node
     plan: free
-    repo: https://github.com/leothey-del/socialMedia.git
-    rootDir: backend/gateway
-    buildCommand: npm install --omit=dev --prefer-offline
+    buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
-    healthCheckIntervalSeconds: 10
-    healthCheckTimeoutSeconds: 5
-    healthThreshold: 2
     envVars:
-      - fromGroup: backend-secrets
       - key: FRONTEND_URL
         value: https://social-media-lyart-two.vercel.app
       - key: AUTH_SERVICE_URL
@@ -21,40 +15,34 @@ services:
         value: http://posts-service:10000
       - key: NODE_ENV
         value: production
-      - key: INIT_DELAY_MS
-        value: "30000" # 30s service startup buffer
 
   - type: web
     name: auth-service
     env: node
     plan: free
-    repo: https://github.com/leothey-del/socialMedia.git
-    rootDir: backend/auth-service
-    buildCommand: npm install --omit=dev --prefer-offline
+    buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
-    healthCheckIntervalSeconds: 15
     envVars:
-      - fromGroup: backend-secrets
       - key: PORT
         value: 10000
+      - key: GATEWAY_URL
+        value: https://gateway-bzl7.onrender.com
+      - key: FRONTEND_URL
+        value: https://social-media-lyart-two.vercel.app
+      - key: MONGO_URI
+        fromGroup: backend-secrets
       - key: NODE_ENV
         value: production
-      - key: INIT_DELAY_MS
-        value: "15000" # 15s DB connection time
 
   - type: web
     name: posts-service
     env: node
     plan: free
-    repo: https://github.com/leothey-del/socialMedia.git
-    rootDir: backend/posts-service
-    buildCommand: npm install --omit=dev --prefer-offline
+    buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
-    healthCheckIntervalSeconds: 15
     envVars:
-      - fromGroup: backend-secrets
       - key: PORT
         value: 10000
       - key: NODE_ENV

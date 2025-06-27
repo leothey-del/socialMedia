@@ -2,55 +2,42 @@ const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
 const app = express();
-const INIT_DELAY = parseInt(process.env.INIT_DELAY_MS) || 30000;
+const PORT = process.env.PORT || 5000;
 
-// Lightweight CORS config
+// CORS Configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL?.split(',') || ['http://localhost:3000'],
-  methods: ['GET', 'POST', 'OPTIONS']
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
-// Startup delay middleware
-let isReady = false;
-setTimeout(() => { isReady = true }, INIT_DELAY);
-
-// Simplified health check
+// Health Check
 app.get('/health', (req, res) => {
-  if (!isReady) return res.status(503).json({ status: 'STARTING' });
-  res.status(200).json({ 
-    status: 'OK',
-    services: {
-      auth: process.env.AUTH_SERVICE_URL,
-      posts: process.env.POSTS_SERVICE_URL
-    }
-  });
+  res.status(200).json({ status: 'Gateway healthy' });
 });
 
-// Proxies with readiness check
-app.use(['/api/auth', '/api/posts'], (req, res, next) => {
-  if (!isReady) return res.status(503).json({ error: 'Service starting' });
-  next();
-});
-
+// Auth Service Proxy
 app.use('/api/auth', createProxyMiddleware({
   target: process.env.AUTH_SERVICE_URL,
   changeOrigin: true,
-  pathRewrite: { '^/api/auth': '' }
+  pathRewrite: { '^/api/auth': '' },
+  onProxyReq: (proxyReq) => {
+    proxyReq.setHeader('x-forwarded-host', process.env.FRONTEND_URL);
+  },
+  xfwd: true
 }));
 
+// Posts Service Proxy
 app.use('/api/posts', createProxyMiddleware({
   target: process.env.POSTS_SERVICE_URL,
   changeOrigin: true,
-  pathRewrite: { '^/api/posts': '' }
+  pathRewrite: { '^/api/posts': '' },
+  xfwd: true
 }));
 
-const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Gateway started on port ${PORT}`);
-  console.log(`Will be ready in ${INIT_DELAY/1000} seconds...`);
+  console.log(`Gateway running on port ${PORT}`);
+  console.log(`Proxying auth to: ${process.env.AUTH_SERVICE_URL}`);
+  console.log(`Proxying posts to: ${process.env.POSTS_SERVICE_URL}`);
 });
