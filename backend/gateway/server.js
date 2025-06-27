@@ -24,7 +24,13 @@ if (!AUTH_SERVICE_HOST || !POSTS_SERVICE_HOST || !FRONTEND_URL) {
 }
 
 const app = express();
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+
+app.use(cors({ 
+  origin: ['https://social-media-lyart-two.vercel.app', 'http://localhost:3000'],
+  credentials: true 
+}));
+
+app.options('*', cors()); // Add this right after the cors() middleware
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'Gateway OK' });
