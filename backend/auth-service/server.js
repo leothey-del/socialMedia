@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require('cors');
 const mongoose = require("mongoose");
 
 // Only run dotenv in a development environment
